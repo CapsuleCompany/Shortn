@@ -15,5 +15,5 @@ A fast and efficient URL shortener built with **Django REST Framework (DRF)**. E
 
 ### **1️⃣ Clone the Repository**
 ```sh
-git clone https://github.com/yourusername/cc-url-shortener.git
+git clone https://github.com/CapsuleCompany/Shortn.git
 cd cc-url-shortener
