@@ -9,6 +9,8 @@ readme = "README.md"
 python = "^3.12"
 django = "^5.1.6"
 djangorestframework = "^3.15.2"
+qrcode = "^8.0"
+pillow = "^11.1.0"
 
 
 [virtualenvs]

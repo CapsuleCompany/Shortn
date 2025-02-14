@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "Shorten.apps.ShortenConfig",
+    'QR.apps.QrConfig',
 ]
 
 MIDDLEWARE = [
