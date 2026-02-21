@@ -173,6 +173,11 @@ STORAGES = {
 # --- Misc ---
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# --- Kafka ---
+# Leave blank to disable event publishing (events will be silently dropped).
+KAFKA_BOOTSTRAP_SERVERS = config("KAFKA_BOOTSTRAP_SERVERS", default="")
+KAFKA_CLIENT_ID = config("KAFKA_CLIENT_ID", default="shortn")
+
 # --- Shortn config ---
 SHORT_CODE_LENGTH = config("SHORT_CODE_LENGTH", default=6, cast=int)
 BASE_URL = config("BASE_URL", default="http://localhost:8000")
