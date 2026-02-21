@@ -57,25 +57,23 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 # --- Database ---
-# Set DB_ENGINE to switch between SQLite (default) and PostgreSQL.
-DB_ENGINE = config("DB_ENGINE", default="django.db.backends.sqlite3")
-
-if DB_ENGINE == "django.db.backends.sqlite3":
+# Uses PostgreSQL when DB_NAME is set (production/CI), otherwise falls back to SQLite.
+if config("DB_NAME", default=""):
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / config("DB_NAME", default="db.sqlite3"),
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": config("DB_NAME"),
+            "USER": config("DB_USER"),
+            "PASSWORD": config("DB_PASSWORD"),
+            "HOST": config("DB_HOST"),
+            "PORT": config("DB_PORT", default="5432"),
         }
     }
 else:
     DATABASES = {
         "default": {
-            "ENGINE": DB_ENGINE,
-            "NAME": config("DB_NAME", default="shortn"),
-            "USER": config("DB_USER", default="postgres"),
-            "PASSWORD": config("DB_PASSWORD", default="postgres"),
-            "HOST": config("DB_HOST", default="localhost"),
-            "PORT": config("DB_PORT", default="5432"),
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
 
