@@ -98,6 +98,27 @@ SIMPLE_JWT = {
     "SIGNING_KEY": config("JWT_SECRET_KEY", default=SECRET_KEY),
 }
 
+# --- Cache ---
+# Uses Redis when REDIS_URL is set, otherwise falls back to in-memory cache.
+REDIS_URL = config("REDIS_URL", default="")
+
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        }
+    }
+
 # --- REST Framework ---
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -114,6 +135,8 @@ REST_FRAMEWORK = {
         "anon": config("ANON_RATE_LIMIT", default="60/min"),
         "user": config("USER_RATE_LIMIT", default="120/min"),
     },
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": config("PAGE_SIZE", default=25, cast=int),
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
@@ -153,3 +176,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # --- Shortn config ---
 SHORT_CODE_LENGTH = config("SHORT_CODE_LENGTH", default=6, cast=int)
 BASE_URL = config("BASE_URL", default="http://localhost:8000")
+
+# Cache TTLs (seconds)
+REDIRECT_CACHE_TTL = config("REDIRECT_CACHE_TTL", default=300, cast=int)  # 5 min
+ANALYTICS_CACHE_TTL = config("ANALYTICS_CACHE_TTL", default=30, cast=int)  # 30 sec
