@@ -18,6 +18,7 @@ psycopg2-binary = "^2.9.9"
 gunicorn = "^23.0.0"
 whitenoise = "^6.7.0"
 django-redis = "^5.4.0"
+confluent-kafka = "^2.13.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
