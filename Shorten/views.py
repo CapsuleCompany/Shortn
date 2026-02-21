@@ -6,6 +6,8 @@ from rest_framework import filters, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.logging import event_logger
+
 from .models import ShortenedURL
 from .serializers import ShortenedURLSerializer
 
@@ -63,7 +65,16 @@ class CreateShortURL(generics.CreateAPIView):
     serializer_class = ShortenedURLSerializer
 
     def perform_create(self, serializer):
-        serializer.save(ip_address=_get_client_ip(self.request))
+        instance = serializer.save(ip_address=_get_client_ip(self.request))
+        user = None
+        if self.request.user and self.request.user.is_authenticated:
+            user = self.request.user.username
+        event_logger.url_created(
+            short_code=instance.short_code,
+            original_url=instance.original_url,
+            ip_address=instance.ip_address,
+            user=user,
+        )
 
 
 class RedirectShortURL(APIView):
@@ -81,6 +92,7 @@ class RedirectShortURL(APIView):
             original_url = url.original_url
             cache.set(cache_key, original_url, settings.REDIRECT_CACHE_TTL)
             pk = url.pk
+            cached = False
         else:
             # Still need the pk for the click count update
             pk = (
@@ -88,8 +100,10 @@ class RedirectShortURL(APIView):
                 .values_list("pk", flat=True)
                 .first()
             )
+            cached = True
 
         ShortenedURL.objects.filter(pk=pk).update(click_count=F("click_count") + 1)
+        event_logger.url_redirected(short_code=short_code, cached=cached)
         return redirect(original_url)
 
 
@@ -108,10 +122,12 @@ class URLAnalytics(generics.RetrieveAPIView):
         cache_key = f"shortn:analytics:{short_code}"
         data = cache.get(cache_key)
 
-        if data is None:
+        cached = data is not None
+        if not cached:
             instance = self.get_object()
             serializer = self.get_serializer(instance)
             data = serializer.data
             cache.set(cache_key, data, settings.ANALYTICS_CACHE_TTL)
 
+        event_logger.url_analytics_viewed(short_code=short_code, cached=cached)
         return Response(data)

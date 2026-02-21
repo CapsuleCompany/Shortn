@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from PIL import Image
 
+from core.logging import event_logger
+
 class GenerateQRCodeView(APIView):
     """
     API to generate a QR code for a given URL with an optional logo in the center.
@@ -51,6 +53,8 @@ class GenerateQRCodeView(APIView):
         buffer = BytesIO()
         qr_img.save(buffer, format="PNG")
         buffer.seek(0)
+
+        event_logger.qr_generated(url=url, has_logo=logo is not None)
 
         response = HttpResponse(buffer, content_type="image/png")
         response["Content-Disposition"] = 'inline; filename="qr_code.png"'
