@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.cache import cache
 from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect
 from rest_framework import filters, generics, viewsets
@@ -65,17 +67,51 @@ class CreateShortURL(generics.CreateAPIView):
 
 
 class RedirectShortURL(APIView):
-    """Redirect a short URL to the original URL."""
+    """Redirect a short URL to the original URL.
+
+    Caches the short_code -> original_url mapping to avoid DB hits on repeat visits.
+    """
 
     def get(self, request, short_code):
-        url = get_object_or_404(ShortenedURL, short_code=short_code)
-        ShortenedURL.objects.filter(pk=url.pk).update(click_count=F("click_count") + 1)
-        return redirect(url.original_url)
+        cache_key = f"shortn:redirect:{short_code}"
+        original_url = cache.get(cache_key)
+
+        if original_url is None:
+            url = get_object_or_404(ShortenedURL, short_code=short_code)
+            original_url = url.original_url
+            cache.set(cache_key, original_url, settings.REDIRECT_CACHE_TTL)
+            pk = url.pk
+        else:
+            # Still need the pk for the click count update
+            pk = (
+                ShortenedURL.objects.filter(short_code=short_code)
+                .values_list("pk", flat=True)
+                .first()
+            )
+
+        ShortenedURL.objects.filter(pk=pk).update(click_count=F("click_count") + 1)
+        return redirect(original_url)
 
 
 class URLAnalytics(generics.RetrieveAPIView):
-    """Retrieve analytics for a shortened URL."""
+    """Retrieve analytics for a shortened URL.
+
+    Responses are cached briefly to reduce DB load under heavy polling.
+    """
 
     queryset = ShortenedURL.objects.all()
     serializer_class = ShortenedURLSerializer
     lookup_field = "short_code"
+
+    def retrieve(self, request, *args, **kwargs):
+        short_code = self.kwargs["short_code"]
+        cache_key = f"shortn:analytics:{short_code}"
+        data = cache.get(cache_key)
+
+        if data is None:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+            data = serializer.data
+            cache.set(cache_key, data, settings.ANALYTICS_CACHE_TTL)
+
+        return Response(data)
