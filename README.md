@@ -1,8 +1,13 @@
-# Shortn
+# CC URL Shortener 
 
 A reusable URL shortening microservice built with Django REST Framework. Shorten URLs, track clicks, generate QR codes, and authenticate users — all through a clean JSON API.
 
 ## Features
+**Shorten Long URLs** – Generate short, unique links.  
+**Redirect Links** – Automatically forwards to the original URL.  
+**Click Analytics** – Tracks the number of times a link is accessed.  
+**Django REST API** – Easily integrate with other applications.  
+**Random Short Codes** – 6-character unique slugs (e.g., `http://yourdomain.com/XyZ123`).  
 
 - **URL Shortening** — Generate short, unique links with configurable code length
 - **Click Analytics** — Track how many times each link is accessed
@@ -13,7 +18,7 @@ A reusable URL shortening microservice built with Django REST Framework. Shorten
 - **Docker Ready** — One-command deployment with Docker Compose (PostgreSQL included)
 - **Health Check** — `GET /health/` for load balancer and orchestrator probes
 
-## Quick Start
+## Installation
 
 ### Local Development
 
